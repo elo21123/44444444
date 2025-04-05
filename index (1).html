@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>GT3 RS Drift z chmurami</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #222;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .car {
+      position: absolute;
+      width: 180px;
+      height: auto;
+      pointer-events: none;
+      z-index: 2;
+      transition: opacity 1s ease-out;
+    }
+    .car img {
+      width: 100%;
+      height: auto;
+    }
+    .cloud {
+      position: absolute;
+      top: 42%;
+      transform: translateY(-50%);
+      width: 800px;
+      opacity: 1;
+      transition: all 4s ease-out;
+      z-index: 4;
+    }
+    .cloud.left {
+      left: calc(50% - 700px);
+    }
+    .cloud.right {
+      left: calc(50% - 100px);
+    }
+    .cloud.move-left {
+      left: -900px;
+      opacity: 0;
+    }
+    .cloud.move-right {
+      left: 120%;
+      opacity: 0;
+    }
+    .smoke {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: rgba(200, 200, 200, 0.3);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(200, 200, 0, 0.3);
+      animation: smoke 1s ease-out forwards;
+      z-index: 1;
+      transition: opacity 2s ease-out;
+    }
+    .smoke.fade-out {
+      opacity: 0;
+    }
+    @keyframes smoke {
+      0% {
+        transform: scale(1);
+        opacity: 0.3;
+      }
+      100% {
+        transform: scale(2.5);
+        opacity: 0;
+      }
+    }
+    .animation-container {
+      transition: opacity 1s ease-out;
+    }
+    .animation-container.hide {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="animation-container" id="animation">
+    <canvas id="tireCanvas"></canvas>
+    <img class="cloud left" id="cloudLeft" src="https://i.ibb.co/XrsQHLyH/Screenshot-5-removebg-preview.png" alt="cloud">
+    <img class="cloud right" id="cloudRight" src="https://i.ibb.co/XrsQHLyH/Screenshot-5-removebg-preview.png" alt="cloud">
+    <div class="car" id="car">
+      <img src="https://i.ibb.co/cSrp6zhn/pors-Photoroom.png" alt="Porsche GT3 RS">
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById('tireCanvas');
+    const ctx = canvas.getContext('2d');
+    const car = document.getElementById('car');
+    const animation = document.getElementById('animation');
+    const cloudLeft = document.getElementById('cloudLeft');
+    const cloudRight = document.getElementById('cloudRight');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+    const radius = 100;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const speed = 0.02;
+    let angle = 0;
+    let stopSmoke = false;
+    function drawTireMark(x, y) {
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    function createSmoke(x, y, angle) {
+      if (stopSmoke) return;
+      const smoke = document.createElement('div');
+      smoke.className = 'smoke';
+      smoke.style.left = `${x}px`;
+      smoke.style.top = `${y}px`;
+      document.body.appendChild(smoke);
+      const directionX = Math.cos(angle) * 10;
+      const directionY = Math.sin(angle) * 10;
+      smoke.style.animation = 'none';
+      setTimeout(() => {
+        smoke.style.left = `${x + directionX}px`;
+        smoke.style.top = `${y + directionY}px`;
+        smoke.style.animation = 'smoke 1s ease-out forwards';
+      }, 10);
+      setTimeout(() => {
+        smoke.classList.add('fade-out');
+        setTimeout(() => smoke.remove(), 2000);
+      }, 500);
+    }
+    function animate() {
+      angle += speed;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      const carAngle = angle + Math.PI / 2;
+      car.style.left = `${x - 90}px`;
+      car.style.top = `${y - 50}px`;
+      car.style.transform = `rotate(${carAngle + 0.4}rad)`;
+      const tireX = x - 50 * Math.cos(carAngle);
+      const tireY = y - 50 * Math.sin(carAngle);
+      drawTireMark(tireX, tireY);
+      if (!stopSmoke && Math.random() < 0.3) {
+        createSmoke(tireX, tireY, carAngle);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+    // Zmienione z 500 ms na 1000 ms
+    setTimeout(() => {
+      cloudLeft.classList.add('move-left');
+      cloudRight.classList.add('move-right');
+    }, 1000);
+    setTimeout(() => {
+      stopSmoke = true;
+      animation.classList.add('hide');
+    }, 4000);
+  </script>
+</body>
+</html>
